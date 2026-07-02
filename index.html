@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ONYXPLAY - Platform Game Terpercaya</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: #0f0f0f; min-height: 100vh; color: white; overflow-x: hidden; padding-bottom: 85px; }
+        
+        .glass { background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; }
+        .btn-kuning { background: linear-gradient(135deg, #facc15, #f59e0b); color: #000; font-weight: 700; box-shadow: 0 0 25px rgba(250,204,21,0.35); transition: all 0.2s; }
+        .btn-kuning:active { transform: scale(0.97); }
+        .btn-hijau { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 0 20px rgba(16,185,129,0.3); }
+        .btn-merah { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 0 20px rgba(239,68,68,0.3); }
+        .btn-ungu { background: linear-gradient(135deg, #8b5cf6, #7c3aed); box-shadow: 0 0 20px rgba(139,92,246,0.3); }
+        .btn-abu { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); transition: all 0.2s; }
+        .btn-abu:hover { background: rgba(255,255,255,0.12); }
+        .btn-aktif { background: rgba(250,204,21,0.15); border: 2px solid #facc15; color: #facc15; }
+        .btn-pilih { background: rgba(255,255,255,0.08); padding: 12px 8px; border-radius: 10px; font-size: 14px; font-weight: 600; text-align: center; transition: all 0.2s; }
+        .btn-pilih.aktif { background: #facc15; color: #000; box-shadow: 0 0 15px rgba(250,204,21,0.4); }
+        .input { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.18); padding: 14px 16px; border-radius: 12px; color: white; font-size: 16px; outline: none; transition: all 0.2s; }
+        .input:focus { border-color: #facc15; box-shadow: 0 0 0 3px rgba(250,204,21,0.1); }
+        .sembunyi { display: none !important; }
+        .teks-gradasi { background: linear-gradient(90deg, #facc15, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .bawah { position: fixed; bottom: 0; left: 0; width: 100%; background: #181818; border-top: 1px solid #27272a; display: flex; justify-content: space-around; padding: 12px 0; z-index: 999; }
+        .nav-item { text-align: center; font-size: 11px; color: #71717a; cursor: pointer; transition: all 0.2s; }
+        .nav-item.aktif { color: #facc15; }
+        .nav-item svg { width: 24px; height: 24px; margin-bottom: 3px; }
+
+        .qris-kotak { background: white; padding: 18px; border-radius: 16px; max-width: 280px; margin: 20px auto; }
+        .info-bayar { background: rgba(255,255,255,0.04); border-radius: 14px; padding: 16px; margin-top: 16px; }
+
+        .roda-wrapper { position: relative; width: 320px; height: 320px; margin: 30px auto; }
+        .penunjuk { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 18px solid transparent; border-right: 18px solid transparent; border-top: 30px solid #facc15; filter: drop-shadow(0 0 12px #facc15); z-index: 10; }
+        .roda { width: 100%; height: 100%; border-radius: 50%; border: 8px solid #facc15; position: relative; overflow: hidden; transition: transform 4.5s cubic-bezier(0.17, 0.67, 0.12, 0.99); box-shadow: 0 0 30px rgba(250,204,21,0.25); }
+        .bagian { position: absolute; width: 50%; height: 50%; transform-origin: bottom right; left: 0; top: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; color: #000; }
+        .bagian span { transform: rotate(22.5deg) translateX(-25px); }
+
+        .papan-plinko { width: 100%; max-width: 360px; height: 420px; margin: 25px auto; background: #18181b; border-radius: 16px; position: relative; overflow: hidden; border: 1px solid #27272a; }
+        .paku { position: absolute; width: 8px; height: 8px; background: #52525b; border-radius: 50%; box-shadow: 0 0 6px rgba(255,255,255,0.2); }
+        .kolom-bawah { position: absolute; bottom: 0; left: 0; width: 100%; display: flex; height: 45px; border-top: 1px solid #3f3f46; }
+        .slot { flex: 1; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; border-right: 1px solid #3f3f46; }
+        .slot:last-child { border: none; }
+        .bola-plinko { position: absolute; width: 16px; height: 16px; background: radial-gradient(circle at 30% 30%, #ff9f43, #ee5a24); border-radius: 50%; box-shadow: 0 0 18px rgba(238,90,36,0.6); }
+
+        /* === GAME BOUNCING BALL - BENTUK BULAT PERSIS === */
+        .lingkaran { 
+            width: 300px; height: 300px; 
+            border: 4px solid #a855f7; 
+            border-radius: 50%; 
+            position: relative; margin: 35px auto; 
+            background: radial-gradient(circle, rgba(30,27,75,0.8) 0%, rgba(15,12,41,0.95) 70%); 
+            box-shadow: 0 0 40px rgba(168,85,247,0.3), inset 0 0 30px rgba(139,92,246,0.15); 
+        }
+        .zona-hijau { 
+            position: absolute; top: -18px; left: 50%; 
+            transform: translateX(-50%); 
+            width: 100px; height: 40px; 
+            background: linear-gradient(135deg, #10b981, #059669); 
+            border-radius: 14px; box-shadow: 0 0 25px rgba(16,185,129,0.5); 
+            display: flex; align-items: center; justify-content: center; 
+            font-weight: bold; font-size: 15px;
+        }
+        .zona-merah { 
+            position: absolute; bottom: -18px; left: 50%; 
+            transform: translateX(-50%); 
+            width: 100px; height: 40px; 
+            background: linear-gradient(135deg, #ef4444, #dc2626); 
+            border-radius: 14px; box-shadow: 0 0 25px rgba(239,68,68,0.5); 
+            display: flex; align-items: center; justify-content: center; 
+            font-weight: bold; font-size: 15px;
+        }
+        .bola { 
+            width: 32px; height: 32px; 
+            background: radial-gradient(circle at 25% 25%, #ffb74d, #ff7043); 
+            border-radius: 50%; 
+            position: absolute; top: 50%; left: 50%; 
+            transform: translate(-50%, -50%); 
+            box-shadow: 0 0 20px rgba(255,112,67,0.7); 
+            transition: all 0.12s ease-out; z-index: 10; 
+        }
+        .angka-pengali { 
+            font-size: 52px; font-weight: 800; 
+            background: linear-gradient(90deg, #10b981, #34d399); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+            text-align: center; 
+        }
+    </style>
+</head>
+<body>
+
+<!-- HALAMAN DAFTAR MASUK -->
+<div id="halaman_auth" class="min-h-screen flex items-center justify-center p-5">
+    <div class="glass w-full max-w-md p-7">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-black teks-gradasi">ONYXPLAY</h1>
+            <p class="text-gray-400 mt-2">Pantul. Tensi. Tentukan Takdirmu!</p>
+        </div>
+        <div class="flex gap-3 mb-6">
+            <button onclick="tampilDaftar()" id="btn_daftar" class="flex-1 py-3 rounded-xl font-bold btn-kuning">DAFTAR</button>
+            <button onclick="tampilMasuk()" id="btn_masuk" class="flex-1 py-3 rounded-xl font-bold btn-abu">MASUK</button>
+        </div>
+
+        <div id="form_daftar">
+            <input type="text" id="reg_user" placeholder="Nama Pengguna" class="input w-full mb-3" required>
+            <input type="password" id="reg_pass" placeholder="Kata Sandi" class="input w-full mb-4" required>
+            <button onclick="prosesDaftar()" class="w-full py-3 rounded-xl font-bold btn-kuning">BUAT AKUN BARU</button>
+        </div>
+
+        <div id="form_masuk" class="sembunyi">
+            <input type="text" id="log_user" placeholder="Nama Pengguna" class="input w-full mb-3" required>
+            <input type="password" id="log_pass" placeholder="Kata Sandi" class="input w-full mb-4" required>
+            <button onclick="prosesMasuk()" class="w-full py-3 rounded-xl font-bold btn-kuning">MASUK AKUN</button>
+            <div class="mt-5 text-center">
+                <button onclick="bukaLoginAdmin()" class="text-sm text-yellow-400 hover:underline">🔐 MASUK SEBAGAI ADMIN</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- LOGIN ADMIN -->
+<div id="login_admin" class="min-h-screen flex items-center justify-center p-5 sembunyi">
+    <div class="glass w-full max-w-md p-7">
+        <div class="text-center mb-6">
+            <h2 class="text-2xl font-bold text-yellow-400">🔐 PANEL ADMIN</h2>
+            <p class="text-sm text-gray-400 mt-1">Akses Khusus Pemilik</p>
+        </div>
+        <input type="password" id="sandi_admin" placeholder="Masukkan Kata Sandi Admin" class="input w-full mb-4">
+        <button onclick="cekLoginAdmin()" class="w-full py-3 rounded-xl font-bold btn-kuning">MASUK KE PANEL</button>
+        <button onclick="kembaliKeUser()" class="w-full py-2 mt-3 rounded-xl font-bold btn-abu">KEMBALI</button>
+    </div>
+</div>
+
+<!-- PANEL ADMIN -->
+<div id="panel_admin" class="sembunyi min-h-screen p-4 pb-24">
+    <div class="sticky top-0 bg-black/90 backdrop-blur p-4 flex justify-between items-center mb-4 rounded-xl">
+        <h2 class="text-xl font-bold text-yellow-400">⚙️ PANEL KENDALI</h2>
+        <button onclick="keluarAdmin()" class="px-4 py-2 rounded-lg btn-merah text-sm font-bold">KELUAR</button>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 mb-6">
+        <button onclick="tabAdmin('akun')" class="py-3 rounded-xl btn-aktif font-bold" id="tab_akun">DAFTAR AKUN</button>
+        <button onclick="tabAdmin('deposit')" class="py-3 rounded-xl btn-abu font-bold" id="tab_deposit">DEPOSIT</button>
+        <button onclick="tabAdmin('tarik')" class="py-3 rounded-xl btn-abu font-bold" id="tab_tarik">PENARIKAN</button>
+        <button onclick="tabAdmin('pengaturan')" class="py-3 rounded-xl btn-abu font-bold" id="tab_pengaturan">ATUR KEMENANGAN</button>
+    </div>
+
+    <div id="admin_akun"><h3 class="font-bold mb-3">📋 Semua Anggota</h3><div id="daftar_semua_akun"></div></div>
+    <div id="admin_deposit" class="sembunyi"><h3 class="font-bold mb-3">💳 Konfirmasi Deposit</h3><div id="daftar_deposit"></div></div>
+    <div id="admin_tarik" class="sembunyi"><h3 class="font-bold mb-3">💸 Permintaan Penarikan</h3><div id="daftar_penarikan"></div></div>
+    <div id="admin_pengaturan" class="sembunyi"><h3 class="font-bold mb-3">🎮 Atur Menang/Kalah</h3><p class="text-sm text-gray-400 mb-4">Centang = Sering Menang | Kosong = Sering Kalah</p><div id="daftar_pengaturan"></div></div>
+</div>
+
+<!-- HALAMAN UTAMA PENGGUNA -->
+<div id="halaman_game" class="sembunyi">
+    <div class="sticky top-0 bg-black/90 backdrop-blur p-4 flex justify-between items-center z-50">
+        <div class="font-bold text-lg" id="nama_user">Pengguna</div>
+        <div class="glass px-4 py-2 flex items-center gap-2">
+            <span class="text-yellow-400 font-bold">Rp</span>
+            <span class="font-bold text-lg" id="saldo_user">0</span>
+        </div>
+    </div>
+
+    <!-- MENU DEPOSIT -->
+    <div id="menu_deposit" class="p-4">
+        <div class="text-center mb-6">
+            <h2 class="text-2xl font-bold">💳 DEPOSIT SALDO</h2>
+            <p class="text-sm text-gray-400 mt-1">Minimal: Rp 10.000</p>
+        </div>
+
+        <div class="flex gap-3 mb-6">
+            <button onclick="pilihMetodeDepo('qris')" id="btn_qris" class="flex-1 py-3 rounded-xl font-bold btn-aktif">QRIS</button>
+            <button onclick="pilihMetodeDepo('ewallet')" id="btn_ewallet" class="flex-1 py-3 rounded-xl font-bold btn-abu">E-WALLET</button>
+        </div>
+
+        <div class="glass p-4 mb-4">
+            <p class="mb-3 font-bold">JUMLAH DEPOSIT</p>
+            <div class="grid grid-cols-3 gap-2 mb-3">
+                <button onclick="aturNominalDepo(10000)" class="btn-pilih aktif">Rp 10K</button>
+                <button onclick="aturNominalDepo(20000)" class="btn-pilih">Rp 20K</button>
+                <button onclick="aturNominalDepo(50000)" class="btn-pilih">Rp 50K</button>
+                <button onclick="aturNominalDepo(100000)" class="btn-pilih">Rp 100K</button>
+                <button onclick="aturNominalDepo(250000)" class="btn-pilih">Rp 250K</button>
+                <button onclick="aturNominalDepo(500000)" class="btn-pilih">Rp 500K</button>
+            </div>
+            <input type="number" id="nominal_depo" value="10000" min="10000" class="input w-full text-center text-lg font-bold">
+        </div>
+
+        <div id="metode_qris">
+            <div class="text-center">
+                <p class="text-sm text-gray-400 mb-3">Scan QRIS untuk membayar</p>
+                <div class="qris-kotak">
+                    <div class="text-center font-bold text-black mb-2">QRIS ONYXPLAY</div>
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=083832667322" alt="QRIS" class="mx-auto rounded">
+                    <p class="mt-2 text-black font-medium">0838 3266 7322</p>
+                </div>
+            </div>
+            <div class="info-bayar">
+                <p class="mb-2"><span class="text-gray-400">Total Bayar:</span> <span class="font-bold text-yellow-400" id="total_bayar">Rp 10.000</span></p>
+                <p class="mb-2"><span class="text-gray-400">Username:</span> <span id="user_depo">-</span></p>
+            </div>
+        </div>
+
+        <div id="metode_ewallet" class="sembunyi">
+            <div class="glass p-4 mb-4">
+                <p class="font-bold mb-2">Pembayaran Via GoPay</p>
+                <div class="bg-green-900/30 p-4 rounded-xl text-center">
+                    <p class="text-sm text-gray-300">Nomor Tujuan</p>
+                    <p class="text-2xl font-bold text-green-400 my-2">0838 3266 7322</p>
+                    <p class="text-sm">Atas Nama: Admin Onyxplay</p>
+                </div>
+            </div>
+            <div class="info-bayar">
+                <p class="mb-2"><span class="text-gray-400">Total Bayar:</span> <span class="font-bold text-yellow-400" id="total_bayar2">Rp 10.000</span></p>
+                <p class="mb-2"><span class="text-gray-400">Username:</span> <span id="user_depo2">-</span></p>
+            </div>
+        </div>
+
+        <button onclick="konfirmasiDeposit()" class="w-full py-4 rounded-xl font-bold text-lg btn-kuning mt-4">KIRIM PERMINTAAN</button>
+    </div>
+
+    <!-- MENU PENARIKAN -->
+    <div id="menu_tarik" class="p-4 sembunyi">
+        <div class="text-center mb-6">
+            <h2 class="text-2xl font-bold">💸 PENARIKAN SALDO</h2>
+            <p class="text-sm text-gray-400 mt-1">Minimal: Rp 50.000</p>
+        </div>
+
+        <div class="glass p-4 mb-4">
+            <p class="mb-3">Saldo Tersedia: <span class="font-bold text-yellow-400" id="saldo_tarik">Rp 0</span></p>
+            <hr class="border-gray-700 my-3">
+            
+            <p class="mb-3 font-bold">PILIH METODE PENARIKAN</p>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <button onclick="pilihMetodeTarik('ewallet')" id="btn_tarik_ewallet" class="py-3 rounded-xl font-bold btn-aktif">💳 E-WALLET</button>
+                <button onclick="pilihMetodeTarik('bank')" id="btn_tarik_bank" class="py-3 rounded-xl font-bold btn-abu">🏦 BANK</button>
+            </div>
+
+            <div id="form_ewallet">
+                <select class="input w-full mb-3">
+                    <option>Pilih E-Wallet</option>
+                    <option>GoPay</option>
+                    <option>OVO</option>
+                    <option>DANA</option>
+                    <option>ShopeePay</option>
+                </select>
+                <input type="text" id="nama_pemilik" placeholder="Nama Pemilik Akun" class="input w-full mb-3">
+                <input type="number" id="nomor_tujuan" placeholder="Nomor E-Wallet" class="input w-full mb-3">
+            </div>
+
+            <div id="form_bank" class="sembunyi">
+                <select class="input w-full mb-3">
+                    <option>Pilih Bank</option>
+                    <option>BCA</option>
+                    <option>BRI</option>
+                    <option>Mandiri</option>
+                    <option>BNI</option>
+                </select>
+                <input type="text" id="nama_pemilik_bank" placeholder="Nama Pemilik Rekening" class="input w-full mb-3">
+                <input type="number" id="nomor_rekening" placeholder="Nomor Rekening" class="input w-full mb-3">
+            </div>
+
+            <p class="mb-2 font-bold mt-2">JUMLAH PENARIKAN</p>
+            <div class="grid grid-cols-3 gap-2 mb-3">
+                <button onclick="aturNominalTarik(50000)" class="btn-pilih aktif">Rp 50K</button>
+                <button onclick="aturNominalTarik(100000)" class="btn-pilih">Rp 100K</button>
+                <button onclick="aturNominalTarik(250000)" class="btn-pilih">Rp 250K</button>
+            </div>
+            <input type="number" id="nominal_tarik" value="50000" min="50000" class="input w-full text-center text-lg font-bold">
+        </div>
+
+        <button onclick="prosesTarik()" class="w-full py-4 rounded-xl font-bold text-lg btn-merah">AJUKAN PENARIKAN</button>
+    </div>
+
+    <!-- GAME RODA -->
+    <div id="game_roda" class="p-4 sembunyi">
+        <div class="text-center mb-4">
+            <h2 class="text-2xl font-bold">🎡 WHEEL OF FORTUNE</h2>
+            <p class="text-green-400 text-sm mt-1">🟢 RTP ~98.4%</p>
+            <div class="glass p-3 mt-3">
+                <p class="text-sm text-gray-400">CURRENT GRAND PRIZE</p>
+                <p class="text-3xl font-bold text-yellow-400">Rp 265</p>
+            </div>
+        </div>
+
+        <div class="roda-wrapper">
+            <div class="penunjuk"></div>
+            <div class="roda" id="roda">
+                <div class="bagian" style="background:#facc15; transform: rotate(0deg) skewY(-67.5deg);"><span>30x</span></div>
+                <div class="bagian" style="background:#38bdf8; transform: rotate(45deg) skewY(-67.5deg);"><span>15x</span></div>
+                <div class="bagian" style="background:#27272a; transform: rotate(90deg) skewY(-67.5deg); color:#fff;"><span>8x</span></div>
+                <div class="bagian" style="background:#27272a; transform: rotate(135deg) skewY(-67.5deg); color:#fff;"><span>5x</span></div>
+                <div class="bagian" style="background:#27272a; transform: rotate(180deg) skewY(-67.5deg); color:#fff;"><span>3x</span></div>
+                <div class="bagian" style="background:#27272a; transform: rotate(225deg) skewY(-67.5deg); color:#fff;"><span>2x</span></div>
+                <div class="bagian" style="background:#27272a; transform: rotate(270deg) skewY(-67.5deg); color:#fff;"><span>1.5x</span></div>
+                <div class="bagian" style="background:#27272a; transform: rotate(315deg) skewY(-67.5deg); color:#fff;"><span>8x</span></div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-4 gap-2 mb-4">
+            <button onclick="aturTaruhRoda(2000)" class="btn-pilih aktif">Rp 2.000</button>
+            <button onclick="aturTaruhRoda(1000)" class="btn-pilih">½</button>
+            <button onclick="aturTaruhRoda(4000)" class="btn-pilih">2x</button>
+            <button class="btn-pilih">TON</button>
+            <button onclick="aturTaruhRoda(5000)" class="btn-pilih">Rp 5K</button>
+            <button onclick="aturTaruhRoda(10000)" class="btn-pilih">Rp 10K</button>
+            <button onclick="aturTaruhRoda(25000)" class="btn-pilih">Rp 25K</button>
+            <button onclick="aturTaruhRoda(50000)" class="btn-pilih">Rp 50K</button>
+            <button onclick="aturTaruhRoda(100000)" class="btn-pilih col-span-4">Rp 100.000</button>
+        </div>
+        <input type="number" id="taruh_roda" value="2000" min="2000" class="input w-full text-center mb-4">
+
+        <button onclick="putarRoda()" id="btn_putar" class="w-full py-4 rounded-xl font-bold text-lg btn-kuning">PUTAR RODA<br><span class="text-sm">SPIN THE WHEEL</span></button>
+    </div>
+
+    <!-- GAME PLINKO -->
+    <div id="game_plinko" class="p-4 sembunyi">
+        <div class="text-center mb-4">
+            <h2 class="text-2xl font-bold">🟡 PLINKO</h2>
+        </div>
+
+        <div class="papan-plinko" id="papan_plinko"></div>
+
+        <div class="flex justify-between items-center mb-3">
+            <input type="number" id="taruh_plinko" value="10000" min="1000" class="input w-1/2">
+            <span class="text-sm text-gray-400">Saldo: Rp <span id="saldo_p">0</span></span>
+        </div>
+
+        <div class="grid grid-cols-4 gap-2 mb-4">
+            <button onclick="aturTaruhPlinko(10000)" class="btn-pilih aktif">10K</button>
+            <button onclick="aturTaruhPlinko(25000)" class="btn-pilih">25K</button>
+            <button onclick="aturTaruhPlinko(50000)" class="btn-pilih">50K</button>
+            <button onclick="aturTaruhPlinko(100000)" class="btn-pilih">100K</button>
+        </div>
+
+        <div class="flex gap-3">
+            <button onclick="jatuhkanBola()" id="btn_plinko" class="flex-1 py-3 rounded-xl font-bold btn-kuning">▶ DROP BALL</button>
+            <button class="py-3 px-6 rounded-xl font-bold btn-abu">AUTO</button>
+        </div>
+    </div>
+
+    <!-- GAME BOUNCING BALL -->
+    <div id="game_bola" class="p-4 sembunyi">
+        <div class="text-center mb-4">
+            <h2 class="text-2xl font-bold">⚽ BOUNCING BALL</h2>
+            <p class="text-sm text-gray-300">Setiap Pantulan: <span id="nilai_mode" class="font-bold text-green-400">+0.15x</span></p>
+        </div>
+
+        <div class="lingkaran">
+            <div class="zona-hijau">MENANG</div>
+            <div class="zona-merah">KALAH 💀</div>
+            <div class="bola" id="bola"></div>
+        </div>
+
+        <div class="angka-pengali mb-6" id="pengali">1.00x</div>
+
+        <div class="flex gap-2 mb-6">
+            <button class="flex-1 py-4 rounded-xl font-bold text-lg btn-hijau" onclick="berhentiGame('menang')">💰 AMBIL MENANG</button>
+            <button class="flex-1 py-4 rounded-xl font-bold text-lg btn-merah" onclick="berhentiGame('kalah')">💀 TERIMA KALAH</button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 mb-4">
+            <button onclick="pilihMode('lite')" id="btn_lite" class="py-3 rounded-xl font-bold btn-abu">LITE<br><span class="text-xs">+0.10x</span></button>
+            <button onclick="pilihMode('mid')" id="btn_mid" class="py-3 rounded-xl font-bold btn-aktif">MID<br><span class="text-xs">+0.15x</span></button>
+            <button onclick="pilihMode('epic')" id="btn_epic" class="py-3 rounded-xl font-bold btn-abu">EPIC<br><span class="text-xs">+0.20x</span></button>
+        </div>
+
+        <div class="glass p-4 mb-4">
+            <div class="grid grid-cols-4 gap-2 mb-3">
+                <button onclick="aturTaruhan(2000)" class="py-2 rounded-lg btn-abu font-bold">2K</button>
+                <button onclick="aturTaruhan(5000)" class="py-2 rounded-lg btn-abu font-bold">5K</button>
+                <button onclick="aturTaruhan(10000)" class="py-2 rounded-lg btn-abu font-bold">10K</button>
+                <button onclick="aturTaruhan(50000)" class="py-2 rounded-lg btn-abu font-bold">50K</button>
+            </div>
+            <input type="number" id="taruhan" value="2000" min="2000" class="input w-full text-center text-lg font-bold">
+        </div>
+
+        <button onclick="mulaiGame()" id="tombol_main" class="w-full py-4 rounded-xl font-bold text-lg btn-ungu">▶ MULAI PERMAINAN</button>
+    </div>
+
+    <!-- MENU BAWAH -->
+    <div class="bawah">
+        <div class="nav-item aktif" onclick="bukaMenu('deposit')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5v-6h14v6zm0-10H5V5h14v4z"/></svg>
+            Deposit
+        </div>
+        <div class="nav-item" onclick="bukaMenu('tarik')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2z"/></svg>
+            Tarik
+        </div>
+        <div class="nav-item" onclick="bukaMenu('roda')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/><path d="M12 6c-.55 0-1 .45-1 1v5c0 .55.45 1 1 1h4c.55 0 1-.45 1-1s-.45-1-1-1h-3V7c0-.55-.45-1-1-1z"/></svg>
+            Roda
+        </div>
+        <div class="nav-item" onclick="bukaMenu('plinko')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+            Plinko
+        </div>
+        <div class="nav-item" onclick="bukaMenu('bola')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+            Bola
+        </div>
+    </div>
+</div>
+
+
+<script>
+// === DATA UTAMA ===
+const NOMOR_ADMIN = '083832667322';
+const SANDI_ADMIN = '120208';
+let akun = JSON.parse(localStorage.getItem('akun')) || null;
+let daftarAkun = JSON.parse(localStorage.getItem('daftarAkun')) || [];
+let daftarPermintaanDepo = JSON.parse(localStorage.getItem('permintaan_depo')) || [];
+let daftarPermintaanTarik = JSON.parse(localStorage.getItem('permintaan_tarik')) || [];
+let taruhanRoda = 2000, taruhanPlinko = 10000, taruhanBola = 2000;
+let modeTerpilih = 'mid', nilaiPengali = 1.00, sedangMain = false, putar;
+let sedangPutar = false;
+let metodeDepo = 'qris', metodeTarik = 'ewallet';
+let sedangAdmin = false;
+let daftarPengali = [30, 15, 8, 5, 3, 2, 1.5, 8];
+
+function cekMasuk() {
+    if (akun) {
+        if(akun.nama == NOMOR_ADMIN) {
+            document.getElementById('halaman_auth').classList.add('sembunyi');
+            document.getElementById('login_admin').classList.remove('sembunyi');
+        } else {
+            document.getElementById('halaman_auth').classList.add('sembunyi');
+            document.getElementById('halaman_game').classList.remove('sembunyi');
+            perbaruiSaldo();
+            gambarPakuPlinko();
+            isiInfoDepo();
+        }
+    }
+}
+cekMasuk();
+
+function perbaruiSaldo() {
+    document.getElementById('nama_user').innerText = akun.nama;
+    document.getElementById('saldo_user').innerText = akun.saldo.toLocaleString();
+    document.getElementById('saldo_p').innerText = akun.saldo.toLocaleString();
+    document.getElementById('saldo_tarik').innerText = 'Rp ' + akun.saldo.toLocaleString();
+}
+
+function isiInfoDepo() {
+    document.getElementById('user_depo').innerText = akun.nama;
+    document.getElementById('user_depo2').innerText = akun.nama;
+}
+
+function bukaMenu(nama) {
+    document.getElementById('menu_deposit').classList.add('sembunyi');
+    document.getElementById('menu_tarik').classList.add('sembunyi');
+    document.getElementById('game_roda').classList.add('sembunyi');
+    document.getElementById('game_plinko').classList.add('sembunyi');
+    document.getElementById('game_bola').classList.add('sembunyi');
+    document.getElementById('menu_'+nama).classList.remove('sembunyi');
+    
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('aktif'));
+    event.target.closest('.nav-item').classList.add('aktif');
+}
+
+function pilihMetodeTarik(mt) {
+    metodeTarik = mt;
+    document.getElementById('btn_tarik_ewallet').className = 'py-3 rounded-xl font-bold ' + (mt=='ewallet'?'btn-aktif':'btn-abu');
+    document.getElementById('btn_tarik_bank').className = 'py-3 rounded-xl font-bold ' + (mt=='bank'?'btn-aktif':'btn-abu');
+    document.getElementById('form_ewallet').classList.toggle('sembunyi', mt!='ewallet');
+    document.getElementById('form_bank').classList.toggle('sembunyi', mt!='bank');
+}
+
+function tampilDaftar() {
+    document.getElementById('form_daftar').classList.remove('sembunyi');
+    document.getElementById('form_masuk').classList.add('sembunyi');
+    document.getElementById('btn_daftar').className = 'flex-1 py-3 rounded-xl font-bold btn-kuning';
+    document.getElementById('btn_masuk').className = 'flex-1 py-3 rounded-xl font-bold btn-abu';
+}
+function tampilMasuk() {
+    document.getElementById('form_masuk').classList.remove('sembunyi');
+    document.getElementById('form_daftar').classList.add('sembunyi');
+    document.getElementById('btn_masuk').className = 'flex-1 py-3 rounded-xl font-bold btn-kuning';
+    document.getElementById('btn_daftar').className = 'flex-1 py-3 rounded-xl font-bold btn-abu';
+}
+function prosesDaftar() {
+    let user = document.getElementById('reg_user').value.trim();
+    let sandi = document.getElementById('reg_pass').value.trim();
+    if(!user || !sandi) return alert('Isi semua kolom!');
+    if(daftarAkun.find(a => a.nama == user)) return alert('Nama sudah dipakai!');
+    
+    daftarAkun.push({ 
+        nama: user, sandi: sandi, saldo: 0,
+        totalMenang: 0, totalKalah: 0,
+        aturanMenang: { roda: false, plinko: false, bola: false }
+    });
+    localStorage.setItem('daftarAkun', JSON.stringify(daftarAkun));
+    alert('✅ Berhasil Daftar! Silakan Masuk.'); tampilMasuk();
+}
+function prosesMasuk() {
+    let user = document.getElementById('log_user').value.trim();
+    let sandi = document.getElementById('log_pass').value.trim();
+    let cocok = daftarAkun.find(a => a.nama == user && a.sandi == sandi);
+    if(!cocok) return alert('❌ Nama atau sandi salah!');
+    akun = cocok; localStorage.setItem('akun', JSON.stringify(akun)); cekMasuk();
+}
+function keluarAkun() {
+    localStorage.removeItem('akun'); akun = null; sedangAdmin = false; location.reload();
+}
+function simpanAkun() {
+    let i = daftarAkun.findIndex(a => a.nama == akun.nama);
+    daftarAkun[i] = akun;
+    localStorage.setItem('daftarAkun', JSON.stringify(daftarAkun));
+    localStorage.setItem('akun', JSON.stringify(akun));
+    perbaruiSaldo();
+}
+function simpanSemuaData() {
+    localStorage.setItem('daftarAkun', JSON.stringify(daftarAkun));
+    localStorage.setItem('permintaan_depo', JSON.stringify(daftarPermintaanDepo));
+    localStorage.setItem('permintaan_tarik', JSON.stringify(daftarPermintaanTarik));
+}
+
+function bukaLoginAdmin() { document.getElementById('halaman_auth').classList.add('sembunyi'); document.getElementById('login_admin').classList.remove('sembunyi'); }
+function cekLoginAdmin() {
+    let sandi = document.getElementById('sandi_admin').value;
+    if(sandi == SANDI_ADMIN) { sedangAdmin = true; document.getElementById('login_admin').classList.add('sembunyi'); document.getElementById('panel_admin').classList.remove('sembunyi'); muatDataAdmin(); }
+    else alert('❌ Kata sandi admin salah!');
+}
+function kembaliKeUser() { document.getElementById('login_admin').classList.add('sembunyi'); document.getElementById('halaman_auth').classList.remove('sembunyi'); }
+function keluarAdmin() { sedangAdmin = false; keluarAkun(); }
+function tabAdmin(nama) {
+    document.getElementById('admin_akun').classList.add('sembunyi');
+    document.getElementById('admin_deposit').classList.add('sembunyi');
+    document.getElementById('admin_tarik').classList.add('sembunyi');
+    document.getElementById('admin_pengaturan').classList.add('sembunyi');
+    document.getElementById('admin_'+nama).classList.remove('sembunyi');
+    document.querySelectorAll('[id^="tab_"]').forEach(t => t.classList.remove('btn-aktif'));
+    document.getElementById('tab_'+nama).classList.add('btn-aktif');
+    muatDataAdmin();
+}
+
+function muatDataAdmin() {
+    let htmlAkun = '';
+    daftarAkun.forEach((a, i) => {
+        htmlAkun += `<div class="p-3 border-b border-gray-800 flex justify-between items-center">
+            <div>
+                <div class="font-bold">${a.nama}</div>
+                <div class="text-sm text-gray-400">Saldo: Rp ${a.saldo.toLocaleString()}</div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="tambahSaldo(${i})" class="px-3 py-1 text-xs rounded-lg btn-hijau font-bold">+</button>
+                <button onclick="kurangiSaldo(${i})" class="px-3 py-1 text-xs rounded-lg btn-merah font-bold">-</button>
+            </div>
+        </div>`;
+    });
+    document.getElementById('daftar_semua_akun').innerHTML = htmlAkun || '<p class="text-gray-400 text-center py-4">Belum ada anggota</p>';
+
+    let htmlDepo = '';
+    daftarPermintaanDepo.forEach((d, i) => {
+        htmlDepo += `<div class="p-3 border-b border-gray-800 flex justify-between items-center">
+            <div>
+                <div class="font-bold">${d.user}</div>
+                <div class="text-sm text-gray-400">Rp ${d.jumlah.toLocaleString()} | ${d.metode}</div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="terimaDepo(${i})" class="px-3 py-1 text-xs rounded-lg btn-hijau font-bold">TERIMA</button>
+                <button onclick="tolakDepo(${i})" class="px-3 py-1 text-xs rounded-lg btn-merah font-bold">TOLAK</button>
+            </div>
+        </div>`;
+    });
+    document.getElementById('daftar_deposit').innerHTML = htmlDepo || '<p class="text-gray-400 text-center py-4">Tidak ada permintaan</p>';
+
+    let htmlTarik = '';
+    daftarPermintaanTarik.forEach((t, i) => {
+        htmlTarik += `<div class="p-3 border-b border-gray-800 flex justify-between items-center">
+            <div>
+                <div class="font-bold">${t.user}</div>
+                <div class="text-sm text-gray-400">Rp ${t.jumlah.toLocaleString()} | ${t.ke} - ${t.nomor}</div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="terimaTarik(${i})" class="px-3 py-1 text-xs rounded-lg btn-hijau font-bold">TERIMA</button>
+                <button onclick="tolakTarik(${i})" class="px-3 py-1 text-xs rounded-lg btn-merah font-bold">TOLAK</button>
+            </div>
+        </div>`;
+    });
+    document.getElementById('daftar_penarikan').innerHTML = htmlTarik || '<p class="text-gray-400 text-center py-4">Tidak ada permintaan</p>';
+
+    let htmlAtur = '';
+    daftarAkun.forEach((a, i) => {
+        htmlAtur += `<div class="p-3 border-b border-gray-800">
+            <div class="font-bold mb-2">${a.nama}</div>
+            <div class="grid grid-cols-3 gap-2 text-sm">
+                <label class="flex items-center gap-1"><input type="checkbox" ${a.aturanMenang.roda?'checked':''} onchange="ubahAturan(${i},'roda')"> Roda</label>
+                <label class="flex items-center gap-1"><input type="checkbox" ${a.aturanMenang.plinko?'checked':''} onchange="ubahAturan(${i},'plinko')"> Plinko</label>
+                <label class="flex items-center gap-1"><input type="checkbox" ${a.aturanMenang.bola?'checked':''} onchange="ubahAturan(${i},'bola')"> Bola</label>
+            </div>
+        </div>`;
+    });
+    document.getElementById('daftar_pengaturan').innerHTML = htmlAtur || '<p class="text-gray-400 text-center py-4">Belum ada anggota</p>';
+}
+
+function tambahSaldo(idx) {
+    let tambah = parseInt(prompt('Masukkan jumlah saldo yang ditambahkan:'));
+    if(isNaN(tambah) || tambah <= 0) return alert('Jumlah tidak valid!');
+    daftarAkun[idx].saldo += tambah;
+    simpanSemuaData(); muatDataAdmin(); alert('✅ Saldo berhasil ditambahkan!');
+}
+function kurangiSaldo(idx) {
+    let kurang = parseInt(prompt('Masukkan jumlah saldo yang dikurangi:'));
+    if(isNaN(kurang) || kurang <= 0) return alert('Jumlah tidak valid!');
+    daftarAkun[idx].saldo = Math.max(0, daftarAkun[idx].saldo - kurang);
+    simpanSemuaData(); muatDataAdmin(); alert('✅ Saldo berhasil dikurangi!');
+}
+function ubahAturan(idx, game) {
+    daftarAkun[idx].aturanMenang[game] = !daftarAkun[idx].aturanMenang[game];
+    simpanSemuaData();
+}
+function terimaDepo(idx) {
+    let d = daftarPermintaanDepo[idx];
+    let i = daftarAkun.findIndex(a => a.nama == d.user);
+    daftarAkun[i].saldo += d.jumlah;
+    daftarPermintaanDepo.splice(idx, 1);
+    simpanSemuaData(); muatDataAdmin(); alert('✅ Deposit diterima!');
+}
+function tolakDepo(idx) {
+    daftarPermintaanDepo.splice(idx, 1);
+    simpanSemuaData(); muatDataAdmin(); alert('❌ Deposit ditolak!');
+}
+function terimaTarik(idx) {
+    let t = daftarPermintaanTarik[idx];
+    let i = daftarAkun.findIndex(a => a.nama == t.user);
+    daftarAkun[i].saldo -= t.jumlah;
+    daftarPermintaanTarik.splice(idx, 1);
+    simpanSemuaData(); muatDataAdmin(); alert('✅ Penarikan diterima!');
+}
+function tolakTarik(idx) {
+    let t = daftarPermintaanTarik[idx];
+    let i = daftarAkun.findIndex(a => a.nama == t.user);
+    daftarAkun[i].saldo += t.jumlah;
+    daftarPermintaanTarik.splice(idx, 1);
+    simpanSemuaData(); muatDataAdmin(); alert('❌ Penarikan ditolak!');
+}
+
+// === FUNGSI DEPOSIT ===
+function pilihMetodeDepo(m) {
+    metodeDepo = m;
+    document.getElementById('btn_qris').className = 'flex-1 py-3 rounded-xl font-bold ' + (m=='qris'?'btn-aktif':'btn-abu');
+    document.getElementById('btn_ewallet').className = 'flex-1 py-3 rounded-xl font-bold ' + (m=='ewallet'?'btn-aktif':'btn-abu');
+    document.getElementById('metode_qris').classList.toggle('sembunyi', m!='qris');
+    document.getElementById('metode_ewallet').classList.toggle('sembunyi', m!='ewallet');
+}
+function aturNominalDepo(n) {
+    document.getElementById('nominal_depo').value = n;
+    document.getElementById('total_bayar').innerText = 'Rp ' + n.toLocaleString();
+    document.getElementById('total_bayar2').innerText = 'Rp ' + n.toLocaleString();
+    document.querySelectorAll('#menu_deposit .btn-pilih').forEach(b=>b.classList.remove('aktif')); event.target.classList.add('aktif');
+}
+document.getElementById('nominal_depo').addEventListener('input', e=>{
+    let n = parseInt(e.target.value) || 0;
+    document.getElementById('total_bayar').innerText = 'Rp ' + n.toLocaleString();
+    document.getElementById('total_bayar2').innerText = 'Rp ' + n.toLocaleString();
+});
+function konfirmasiDeposit() {
+    let jml = parseInt(document.getElementById('nominal_depo').value);
+    if(jml < 10000) return alert('Minimal deposit Rp 10.000!');
+    daftarPermintaanDepo.push({user:akun.nama, jumlah:jml, metode:metodeDepo, waktu:new Date().toLocaleString()});
+    simpanSemuaData(); alert('✅ Permintaan deposit terkirim! Tunggu konfirmasi admin.');
+}
+
+// === FUNGSI PENARIKAN ===
+function aturNominalTarik(n) {
+    document.getElementById('nominal_tarik').value = n;
+    document.querySelectorAll('#menu_tarik .btn-pilih').forEach(b=>b.classList.remove('aktif')); event.target.classList.add('aktif');
+}
+function prosesTarik() {
+    let jml = parseInt(document.getElementById('nominal_tarik').value);
+    if(jml < 50000) return alert('Minimal penarikan Rp 50.000!');
+    if(jml > akun.saldo) return alert('Saldo tidak cukup!');
+    
+    let tujuan = metodeTarik=='ewallet' ? 'E-Wallet' : 'Bank';
+    let nomor = metodeTarik=='ewallet' ? document.getElementById('nomor_tujuan').value : document.getElementById('nomor_rekening').value;
+    if(!nomor) return alert('Isi nomor tujuan!');
+
+    akun.saldo -= jml; simpanAkun();
+    daftarPermintaanTarik.push({user:akun.nama, jumlah:jml, ke:tujuan, nomor:nomor, waktu:new Date().toLocaleString()});
+    simpanSemuaData(); alert('✅ Permintaan penarikan terkirim!');
+}
+
+// === FUNGSI GAME RODA ===
+function aturTaruhRoda(n) { taruhanRoda = n; document.getElementById('taruh_roda').value = n; document.querySelectorAll('#game_roda .btn-pilih').forEach(b=>b.classList.remove('aktif')); event.target.classList.add('aktif'); }
+document.getElementById('taruh_roda').addEventListener('input', e=>taruhanRoda = parseInt(e.target.value)||0);
+
+function putarRoda() {
+    if(sedangPutar) return;
+    if(taruhanRoda < 2000) return alert('Taruhan minimal Rp 2.000!');
+    if(taruhanRoda > akun.saldo) return alert('Saldo tidak cukup!');
+    
+    akun.saldo -= taruhanRoda; simpanAkun(); sedangPutar = true;
+    document.getElementById('btn_putar').innerText = 'SEDANG BERPUTAR...';
+    document.getElementById('btn_putar').disabled = true;
+
+    let idxMenang;
+    let aturan = daftarAkun.find(a=>a.nama==akun.nama).aturanMenang.roda;
+    if(aturan) idxMenang = Math.random()<0.7 ? Math.floor(Math.random()*3) : Math.floor(Math.random()*8);
+    else idxMenang = Math.random()<0.7 ? Math.floor(Math.random()*5)+3 : Math.floor(Math.random()*8);
+
+    let sudut = 360 * 5 + (360/8)*idxMenang + (Math.random()*20-10);
+    document.getElementById('roda').style.transform = `rotate(${sudut}deg)`;
+
+    setTimeout(()=>{
+        let hasil = daftarPengali[idxMenang];
+        let didapat = Math.round(taruhanRoda * hasil);
+        if(hasil>1) { akun.saldo += didapat; alert(`🎉 MENANG! Dapat Rp ${didapat.toLocaleString()} (${hasil}x)`); }
+        else alert(`😞 KALAH! Hasil ${hasil}x`);
+        simpanAkun(); sedangPutar = false;
+        document.getElementById('btn_putar').innerText = 'PUTAR RODA\nSPIN THE WHEEL';
+        document.getElementById('btn_putar').disabled = false;
+    }, 4500);
+}
+
+// === FUNGSI GAME PLINKO ===
+function gambarPakuPlinko() {
+    let papan = document.getElementById('papan_plinko');
+    let baris = 12, jarakX = 30, jarakY = 32, awalX = 180;
+    for(let b=0; b<baris; b++){
+        let jumlah = b+3;
+        let lebar = jumlah * jarakX;
+        let mulai = (360 - lebar)/2 + jarakX/2;
+        for(let k=0; k<jumlah; k++){
+            let p = document.createElement('div'); p.className='paku';
+            p.style.left = (mulai + k*jarakX) + 'px';
+            p.style.top = (40 + b*jarakY) + 'px';
+            papan.appendChild(p);
+        }
+    }
+    let slotNilai = [20,18,5,2.5,1.6,0.8,2.5,5,18,20];
+    let kolom = document.createElement('div'); kolom.className='kolom-bawah';
+    slotNilai.forEach(n=>{
+        let s = document.createElement('div'); s.className='slot'; s.innerText = n+'x';
+        s.style.color = n>=10?'#facc15':n>=5?'#38bdf8':'#94a3b8';
+        kolom.appendChild(s);
+    });
+    papan.appendChild(kolom);
+}
+function aturTaruhPlinko(n) { taruhanPlinko = n; document.getElementById('taruh_plinko').value = n; document.querySelectorAll('#game_plinko .btn-pilih').forEach(b=>b.classList.remove('aktif')); event.target.classList.add('aktif'); }
+document.getElementById('taruh_plinko').addEventListener('input', e=>taruhanPlinko = parseInt(e.target.value)||0);
+
+function jatuhkanBola() {
+    if(taruhanPlinko < 1000) return alert('Taruhan minimal Rp 1.000!');
+    if(taruhanPlinko > akun.saldo) return alert('Saldo tidak cukup!');
+    
+    akun.saldo -= taruhanPlinko; simpanAkun();
+    let papan = document.getElementById('papan_plinko');
+    let bola = document.createElement('div'); bola.className='bola-plinko';
+    bola.style.left = '172px'; bola.style.top = '0px'; papan.appendChild(bola);
+
+    let aturan = daftarAkun.find(a=>a.nama==akun.nama).aturanMenang.plinko;
+    let slotAkhir;
+    if(aturan) slotAkhir = Math.random()<0.7 ? [0,1,8,9][Math.floor(Math.random()*4)] : Math.floor(Math.random()*10);
+    else slotAkhir = Math.random()<0.7 ? [2,3,4,5,6,7][Math.floor(Math.random()*6)] : Math.floor(Math.random()*10);
+
+    let posX = 172, posY = 0, arah = Math.random()<0.5?-1:1;
+    let gerak = setInterval(()=>{
+        posY += 3; posX += arah * 2;
+        if(Math.random()<0.08) arah *= -1;
+        if(posX<10) arah=1; if(posX>330) arah=-1;
+        bola.style.top = posY+'px'; bola.style.left = posX+'px';
+        
+        if(posY >= 360) {
+            clearInterval(gerak);
+            let nilai = [20,18,5,2.5,1.6,0.8,2.5,5,18,20][slotAkhir];
+            let didapat = Math.round(taruhanPlinko * nilai);
+            bola.style.left = (slotAkhir * 36 + 10) + 'px';
+            if(nilai>1) { akun.saldo += didapat; alert(`🎉 MENANG! Dapat Rp ${didapat.toLocaleString()} (${nilai}x)`); }
+            else alert(`😞 KALAH! Hasil ${nilai}x`);
+            simpanAkun(); setTimeout(()=>bola.remove(), 1000);
+        }
+    }, 30);
+}
+
+// === FUNGSI GAME BOUNCING BALL ===
+function pilihMode(m) {
+    modeTerpilih = m;
+    document.getElementById('btn_lite').className = 'py-3 rounded-xl font-bold ' + (m=='lite'?'btn-aktif':'btn-abu');
+    document.getElementById('btn_mid').className = 'py-3 rounded-xl font-bold ' + (m=='mid'?'btn-aktif':'btn-abu');
+    document.getElementById('btn_epic').className = 'py-3 rounded-xl font-bold ' + (m=='epic'?'btn-aktif':'btn-abu');
+    document.getElementById('nilai_mode').innerText = m=='lite'?'+0.10x':m=='mid'?'+0.15x':'+0.20x';
+}
+function aturTaruhan(n) { taruhanBola = n; document.getElementById('taruhan').value = n; }
+document.getElementById('taruhan').addEventListener('input', e=>taruhanBola = parseInt(e.target.value)||0);
+
+function mulaiGame() {
+    if(sedangMain) return;
+    if(taruhanBola < 2000) return alert('Taruhan minimal Rp 2.000!');
+    if(taruhanBola > akun.saldo) return alert('Saldo tidak cukup!');
+    
+    akun.saldo -= taruhanBola; simpanAkun();
+    sedangMain = true; nilaiPengali = 1.00;
+    document.getElementById('pengali').innerText = '1.00x';
+    document.getElementById('tombol_main').innerText = 'SEDANG BERMAIN...';
+    document.getElementById('tombol_main').disabled = true;
+
+    let bola = document.getElementById('bola');
+    let posX = 134, posY = 134, vX = (Math.random()-0.5)*5, vY = 4;
+    let r = 16, lingkaranR = 150;
+    let tambah = modeTerpilih=='lite'?0.10:modeTerpilih=='mid'?0.15:0.20;
+    let aturan = daftarAkun.find(a=>a.nama==akun.nama).aturanMenang.bola;
+    let pantulanIzinkan = aturan ? 12 : 5;
+
+    putar = setInterval(()=>{
+        posX += vX; posY += vY;
+        let tengahX = posX + r; let tengahY = posY + r;
+        let jarak = Math.sqrt(Math.pow(tengahX-150,2) + Math.pow(tengahY-150,2));
+
+        if(jarak + r >= lingkaranR) {
+            let sudut = Math.atan2(tengahY-150, tengahX-150);
+            vX = -Math.cos(sudut)*3 + (Math.random()-0.5);
+            vY = -Math.sin(sudut)*3 + (Math.random()-0.5);
+            nilaiPengali = Math.round((nilaiPengali + tambah)*100)/100;
+            document.getElementById('pengali').innerText = nilaiPengali.toFixed(2)+'x';
+            pantulanIzinkan--;
+        }
+
+        if(pantulanIzinkan <= 0) {
+            clearInterval(putar);
+            berhentiGame(aturan?'menang':'kalah');
+            return;
+        }
+
+        bola.style.left = posX+'px'; bola.style.top = posY+'px';
+    }, 30);
+}
+
+function berhentiGame(hasil) {
+    if(!sedangMain) return;
+    clearInterval(putar); sedangMain = false;
+    let didapat = Math.round(taruhanBola * nilaiPengali);
+    
+    if(hasil=='menang') { akun.saldo += didapat; alert(`🎉 MENANG! Dapat Rp ${didapat.toLocaleString()} (${nilaiPengali.toFixed(2)}x)`); }
+    else alert(`💀 KALAH! Semua saldo taruhan hangus`);
+    
+    simpanAkun();
+    document.getElementById('tombol_main').innerText = '▶ MULAI PERMAINAN';
+    document.getElementById('tombol_main').disabled = false;
+    document.getElementById('bola').style.left = '134px';
+    document.getElementById('bola').style.top = '134px';
+}
+</script>
+</body>
+</html>
